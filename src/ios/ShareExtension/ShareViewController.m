@@ -150,7 +150,15 @@
                     utis = itemProvider.registeredTypeIdentifiers;
                 }
                 else {
-                    uti = SHAREEXT_UNIFORM_TYPE_IDENTIFIER;
+                    if([itemProvider hasItemConformingToTypeIdentifier:@"public.video"]) {
+                        uti = @"public.video";
+                    }
+                    if([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
+                        uti = @"public.image";
+                    }
+                    if([itemProvider hasItemConformingToTypeIdentifier:@"public.url"]) {
+                        uti = @"public.url";
+                    }
                 }
                 NSDictionary *dict = @{
                     @"text": self.contentText,
