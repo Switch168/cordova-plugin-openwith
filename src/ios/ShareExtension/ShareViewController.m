@@ -125,8 +125,38 @@
     // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
     for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
         
+        
+        
+        
         if ([itemProvider hasItemConformingToTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER]) {
             [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
+            
+             // URL
+             if ([itemProvider hasItemConformingToTypeIdentifier:@"public.url"]) {
+                [itemProvider loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:^(NSURL *url, NSError *error) {
+                    [self debug:url.absoluteString];
+                    NSString *uti = @"";
+                       NSData *data = [[NSData alloc] init];
+                    NSArray<NSString *> *utis = [NSArray new];
+                    if ([itemProvider.registeredTypeIdentifiers count] > 0) {
+                        uti = itemProvider.registeredTypeIdentifiers[0];
+                        utis = itemProvider.registeredTypeIdentifiers;
+                    }
+                       NSDictionary *dict = @{
+                           @"text": self.contentText,
+                           @"backURL": self.backURL,
+                           @"data" : data,
+                           @"uti": uti,
+                           @"utis": utis,
+                           @"name": url.absoluteString
+                       };
+                    [self.userDefaults setObject:dict forKey:@"image"];
+                    [self.userDefaults synchronize];
+                    NSString *urlApp = [NSString stringWithFormat:@"%@://image", SHAREEXT_URL_SCHEME];
+                    [self openURL:[NSURL URLWithString:urlApp]];
+                    [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil]; }];
+                 return;
+             }
             
             [itemProvider loadItemForTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
                 
