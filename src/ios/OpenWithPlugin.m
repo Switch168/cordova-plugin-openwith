@@ -137,6 +137,7 @@ static NSDictionary* launchOptions = nil;
 
     // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onPause) name:UIApplicationDidEnterBackgroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResume) name:UIApplicationWillEnterForegroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResume) name:@"didForwardWithinApp" object:nil];
     // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onOrientationWillChange) name:UIApplicationWillChangeStatusBarOrientationNotification object:nil];
     // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onOrientationDidChange) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
 
@@ -265,6 +266,10 @@ static NSDictionary* launchOptions = nil;
     }];
     pluginResult.keepCallback = [NSNumber numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
+        // FileOpener2.m
+    [[NSNotificationCenter defaultCenter]
+                 postNotificationName:@"DismissDoController"
+                 object:self];
 }
 
 // Initialize the plugin
