@@ -406,6 +406,9 @@
             
             if ([itemProvider hasItemConformingToTypeIdentifier:@"public.png"]) {
                 [itemProvider loadItemForTypeIdentifier:@"public.png" options:nil completionHandler:^(NSURL *url, NSError *error) {
+                    if(error) {
+                        return;
+                    }
                     NSLog(@"dataPath------------------------------------------------------------");
                     [self debug:url.absoluteString];
                     NSString *uti = @"";
@@ -446,6 +449,75 @@
                     NSString *urlApp = [NSString stringWithFormat:@"%@://image", SHAREEXT_URL_SCHEME];
                     [self openURL:[NSURL URLWithString:urlApp]];
                     [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil]; }];
+                return;
+            }
+            
+            // screenshot codepath
+            if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
+                [itemProvider loadItemForTypeIdentifier:@"public.image" options:nil completionHandler:^(NSURL *url, NSError *error) {
+                    NSArray *registeredTypeIdentifiers = itemProvider.registeredTypeIdentifiers;
+                    if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
+                              [itemProvider loadItemForTypeIdentifier:registeredTypeIdentifiers.firstObject options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
+                                  if (item) {
+                                      // For all selected photos/files
+                                      if([(NSObject*)item isKindOfClass:[NSURL class]]) {
+                                          NSData *contentData = [NSData dataWithContentsOfURL:(NSURL *)item];
+                                        // continue working with selected image/file
+                                      }
+                                      if([(NSObject*)item isKindOfClass:[UIImage class]]) {
+                                         NSData  *contentData = UIImagePNGRepresentation((UIImage*)item);
+                                        // continue working with screenshot data
+                                      
+                                      
+                                      NSLog(@"dataPath------------------------------------------------------------");
+                                      [self debug:url.absoluteString];
+                                      [self debug:error.localizedDescription];
+                                      
+                                      NSString *uti = @"";
+                                      
+                                      NSError* readError = nil;
+                                      NSData *data = contentData;
+                                      if (data == nil) {
+                                          NSLog(@"Failed to read file, error %@", readError);
+                                      }
+                                      
+                                      NSUUID *uuid = [NSUUID UUID];
+                                      NSString *str = [uuid UUIDString];
+                                      
+                                      NSURL  *containerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:SHAREEXT_GROUP_IDENTIFIER];
+                                      NSString *dataPath =
+                                      [containerURL.absoluteString stringByAppendingPathComponent: [str stringByAppendingString:@".png"]];
+                                      containerURL = [containerURL URLByAppendingPathComponent:[NSString stringWithFormat: [str.lowercaseString stringByAppendingString:@".png"]]];
+                                      
+                                      NSError* writeError = nil;
+                                      [[NSFileManager defaultManager] createFileAtPath:dataPath contents:nil attributes:nil];
+                                      [data writeToURL:containerURL options: NSDataWritingAtomic error: &writeError];
+                                      
+                                      NSArray<NSString *> *utis = [NSArray new];
+                                      if ([itemProvider.registeredTypeIdentifiers count] > 0) {
+                                          uti = itemProvider.registeredTypeIdentifiers[0];
+                                          utis = itemProvider.registeredTypeIdentifiers;
+                                      }
+                                      NSDictionary *dict = @{
+                                          @"text": self.contentText,
+                                          @"backURL": self.backURL,
+                                          @"data" : [[NSData alloc] init],
+                                          @"uti": uti,
+                                          @"utis": utis,
+                                          @"name": containerURL.absoluteString,
+                                          @"isScreenshotData": @"true"
+                                      };
+                                      [self.userDefaults setObject:dict forKey:@"image"];
+                                      [self.userDefaults synchronize];
+                                      NSString *urlApp = [NSString stringWithFormat:@"%@://image", SHAREEXT_URL_SCHEME];
+                                      [self openURL:[NSURL URLWithString:urlApp]];
+                                      [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+                                      }
+                                            
+                                  }
+                              }];
+                    }
+                }];
                 return;
             }
             
